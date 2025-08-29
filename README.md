@@ -1,56 +1,111 @@
-# Smart Librarian (RAG + Tool Calling) — Minimal
+# Reading Bot (RAG + Tool Calling)
 
-## Ce face
-- Indexează 12+ rezumate de cărți în **ChromaDB** folosind embeddings **OpenAI `text-embedding-3-small`**.
-- Chat CLI care, la fiecare întrebare:
-  1) face căutare semantică (RAG) în Chroma,
-  2) cere modelului să aleagă *o singură* carte,
-  3) **apelează un tool** `get_summary_by_title(title)` pentru a afișa rezumatul detaliat.
+> Minimal educational project that shows how to combine an LLM with RAG (Retrieval-Augmented Generation) and a local tool/function call.
 
-## Cerințe
-- Python 3.10+
-- Variabilă de mediu `OPENAI_API_KEY` setată
+## Goal
 
-## Instalare
+This project was built to practice:
+- **RAG** with a local **ChromaDB** vector store (not OpenAI vector store),
+- **OpenAI Chat API** with **Function Calling**,
+- A small **CLI** workflow end-to-end.
+
+You ask for a type of book (e.g., "a book about freedom and control"); the system:
+1) retrieves top matching books using **semantic search** (RAG),  
+2) asks the LLM to recommend **exactly one** title from those candidates,  
+3) automatically calls a local tool `get_summary_by_title(title)` to print the **full, detailed summary**.
+
+---
+
+## Features
+
+- 12+ short book summaries are embedded with `text-embedding-3-small` and stored in **ChromaDB**.
+- **CLI chatbot** that performs retrieval → model selection → function call for the detailed summary.
+- Clear, small codebase for learning and reuse.
+
+---
+
+## Requirements
+
+- Python **3.10+**
+- An OpenAI API key available as environment variable `OPENAI_API_KEY`
+- Internet connection (for embeddings & chat completions)
+
+---
+
+
+##  Quick Start
+
+1. Clone the repository and set up the environment:
 ```bash
+git clone https://github.com/<your-username>/smart-librarian.git
+cd smart-librarian
 python -m venv .venv
-# Windows: .venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
-
+.venv\Scripts\activate    # On Windows
 pip install -r requirements.txt
-export OPENAI_API_KEY="sk-..."
 ```
 
-## 1) Construiește indexul
+2. Add your OpenAI API key:
+```bash
+setx OPENAI_API_KEY "sk-..."   # Windows
+# or export OPENAI_API_KEY="sk-..." on macOS/Linux
+```
+
+3. Build the index (creates embeddings and stores them in ChromaDB):
 ```bash
 python build_index.py
 ```
-Va crea un director `chroma_db/` cu colecția `books`.
 
-## 2) Pornește chatbotul CLI
+4. Run the chatbot CLI:
 ```bash
 python chat_cli.py
 ```
-Exemple de întrebări:
-- `Vreau o carte despre libertate și control social.`
-- `Ce recomanzi pentru cineva care iubește povești de război?`
-- `Ce-mi recomanzi dacă iubesc poveștile fantastice?`
 
-Tastează `q` pentru ieșire.
+---
 
-## Structură
+##  Example Usage
+
+**Input**
+```text
+? Book search:
+> I want a book about freedom and control
 ```
+
+**Output**
+```text
+Recommended: 1984
+Reason: It is a dystopian story focused on surveillance, truth, and social control.
+
+Detailed Summary:
+A society controlled by the Party, with total surveillance and propaganda.
+Winston resists but is defeated through re-education.
+```
+
+ You can try other prompts like:
+- `What do you recommend for someone who loves war stories?`
+- `Recommend me something if I like fantasy adventures.`
+- `What is The Hobbit?`
+
+---
+
+##  Project Structure
+
+```bash
 smart-librarian/
-├─ book_summaries.md          # 12+ cărți (titlu, teme, scurt rezumat) – sursa pentru index
-├─ summaries_dict.py          # rezumate detaliate folosite de tool
-├─ build_index.py             # ingestion + embeddings + indexing în Chroma
-├─ chat_cli.py                # chat + RAG + tool calling
-├─ requirements.txt
-└─ README.md
+├── book_summaries.md   # Source list: 12+ books with Title, Themes, Short summary (for indexing)
+├── summaries_dict.py   # Detailed summaries (used by the tool get_summary_by_title)
+├── build_index.py      # Ingestion + embeddings + add to Chroma collection
+├── chat_cli.py         # CLI: RAG + LLM + function calling
+├── requirements.txt    # Project dependencies
+└── README.md           # This file
 ```
 
-## Notă
-- Folosește **Chroma** (nu OpenAI vector store), conform cerinței.
-- Tool-ul este înregistrat în Chat API și apelat automat după recomandare.
-- Poți modifica/adauga cărți editând `book_summaries.md` și `summaries_dict.py` apoi rulând din nou `build_index.py`.
+---
+
+## ⚙️ How it works
+
+1. **Indexing**: `build_index.py` → generates embeddings and stores them in ChromaDB.  
+2. **Retrieval**: query embeddings → top-k matches from Chroma.  
+3. **Recommendation**: Chat API chooses exactly one title.  
+4. **Tool calling**: `get_summary_by_title` returns the detailed summary.
+
+---
